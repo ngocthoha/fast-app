@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from .account import Account
 import attrs
 
 
@@ -10,3 +10,4 @@ class Bill:
     total: int
     term_start_date: datetime
     term_end_date: datetime
+    account: Account

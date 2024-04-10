@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from src.domain.models import Account
 
 import attrs
 
@@ -19,6 +20,7 @@ class GetBillResponse:
     total: int
     term_start_date: datetime
     term_end_date: datetime
+    account: Account
 
 
 class GetBillUseCase:
