@@ -1,6 +1,11 @@
 from datetime import datetime
 
+import attrs
 
+from domain.models.bill import Bill
+
+
+@attrs.define(slots=False, kw_only=True)
 class BillLine:
     id: str
     summary: str
@@ -12,3 +17,4 @@ class BillLine:
     discount_percent: int
     term_start_date: datetime
     term_end_date: datetime
+    bill: Bill
