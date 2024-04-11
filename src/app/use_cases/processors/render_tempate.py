@@ -15,6 +15,7 @@ class RenderTemplateUseCase:
         self._uow = uow
 
     def execute(self, command: RenderTemplateCommand):
-        return PDFBillProcessor.generate_template(
+        pdf_bill_processor = PDFBillProcessor()
+        return pdf_bill_processor.generate_template(
             command.bill_id, command.type
         )

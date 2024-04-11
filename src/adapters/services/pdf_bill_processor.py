@@ -6,8 +6,11 @@ class PDFBillProcessor(BillProcessor):
     _render_type = RenderType.PDF
 
     def generate_template(self, bill_id: str, type: str = None):
-        payload = {}
-        return self._render_template(
-            "cloud_server.bill",
-            payload,
+        payload = {
+            "bill_id": bill_id
+        }
+        template = self._render_template(
+            filename=f"{bill_id}.cloud_server.bill",
+            payload=payload,
         )
+        return template

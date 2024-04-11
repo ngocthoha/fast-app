@@ -1,4 +1,18 @@
-<head></head>
+{% import "header.html.j2" as Header %}
+{% import "overview.html.j2" as Overview %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>BILLS | Bizfly Cloud</title>
+    <meta charset='utf-8'/>
+    <link rel="stylesheet" type="text/css" href="{{ css_path }}"/>
+</head>
+
 <body>
-    <h1>Interest Rate</h1>
+    {{ Header.render([]) }}
+    {{ Overview }}
 </body>
+
+</html>

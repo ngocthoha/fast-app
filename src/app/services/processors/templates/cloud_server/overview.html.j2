@@ -1,0 +1,38 @@
+<table class="mt-1 table project-table">
+    <thead>
+    <tr class="title-line">
+        <th>STT</th>
+        <th>Dự án</th>
+        <th>Chi phí cần thanh toán</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for service in service_infor %}
+        <tr>
+            <td class="text-center">
+                <b>{{ service.idx_project }}</b>
+            </td>
+            <td class="text-left">
+                <div>
+                    <b style="text-transform:uppercase">{{ service.service_name }}</b>
+                </div>
+            </td>
+
+            <td class="text-right pr-2">{{ service.total_bill_unpaid }}</td>
+        </tr>
+    {% endfor %}
+    <thead>
+    <tr class="title-line-bill-total">
+        <th></th>
+        <th></th>
+        <th>Tổng: {{ total_bill }}</th>
+    </tr>
+    </thead>
+    </tbody>
+</table>
+<p class="mt-1 mb-4 text-right">
+    <small>
+        <i>Chi phí đã bao gồm VAT</i>
+    </small>
+</p>
+<hr>
