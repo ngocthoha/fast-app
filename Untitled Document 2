@@ -1,0 +1,4 @@
+- project (mỗi bảng là một dự án)
+	- group by region
+		- bill_lines
+ 			+ group by related_ref (gộp lại bởi 1 dòng xanh đậm)

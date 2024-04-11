@@ -1,0 +1,17 @@
+- Tên resource: bill_line.summary
+- region: bill_line.region_name
+
+saving_plan_PREMIUM-HDD1_disk
+Premium: ubuntu-2vcpu-2gb-1-
+05fct_rootdisk 40GB
+- Tên resource block: bill_line.subscription.resource_type, bill_line.subscription.category.summary, resource_name, subscription_metas.init_quantity product.quantity_unit
+- Từ ngày: term_start_date
+- đến ngày: term_end_date
+
+- sử dụng: bill_line.quantity
+- chi phí: bill_line.subtotal của unpaid và paid cộng lại khi cùng subscription_id
+- chiết khau: bill_line.discount_percent lấy của bill_line unpaid
+- tiền chiết khấu: subtotal - total = chi phí - chi phí sau chiết khấu
+- chi phi sau chiet khau: bill_line.total (của cả unpaid và paid)
+- da thanh toan: lấy từ bill_line có status là paid lấy field total
+- chưa thanh toán: bill_line.total của unpaid
