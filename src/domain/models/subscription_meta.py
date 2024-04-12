@@ -1,4 +1,4 @@
-from domain.models.subscription import Subscription
+from src.domain.models.subscription import Subscription
 
 
 class SubscriptionMeta:

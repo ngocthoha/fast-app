@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.repositories.bill_line_repository import BillLineRepository
+from ..repositories import BillLineRepository
 
 from ..repositories import BillRepository
 

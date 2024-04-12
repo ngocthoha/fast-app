@@ -1,4 +1,4 @@
-from domain.models.product import Product
+from src.domain.models.product import Product
 
 
 class Plan:

@@ -35,7 +35,7 @@ bill_lines_table = Table(
     Column("status", String),
     Column("discount_percent", Integer),
     Column("term_start_date", DateTime),
-    Column("term_start_date", DateTime),
+    Column("term_end_date", DateTime),
     Column("bill_id", String, ForeignKey("bills.id")),
 )
 

@@ -43,6 +43,12 @@ class BillProcessor(ABC):
         if self._render_type == RenderType.PDF:
             return self._render_pdf_template(filename, payload, template_name)
 
+    def _prepare_data(bill_lines):
+        """
+        Prepares data for rendering template
+        """
+        pass
+
     def _render_pdf_template(
             self,
             filename: str,

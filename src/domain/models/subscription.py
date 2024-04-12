@@ -1,4 +1,4 @@
-from domain.models.category import Category
+from src.domain.models.category import Category
 
 
 class Subscription:

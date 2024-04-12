@@ -1,5 +1,6 @@
-from app.repositories.bill_line_repository import BillLineRepository
-from domain.models.bill_line import BillLine
+from src.domain.models.bill import Bill
+from src.app.repositories.bill_line_repository import BillLineRepository
+from src.domain.models.bill_line import BillLine
 
 
 class SQLBillLineRepository(BillLineRepository):
@@ -8,8 +9,9 @@ class SQLBillLineRepository(BillLineRepository):
         self.session = session
 
     def find_bill_lines_by_bill_id(self, bill_id: str):
-        bill_lines = (
+        query = (
             self.session.query(BillLine)
-            .filter(BillLine.bill.id == bill_id)
+            .join(Bill)
+            .filter(Bill.id == bill_id)
         )
-        return bill_lines
+        return query.all()

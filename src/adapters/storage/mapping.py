@@ -12,7 +12,13 @@ def setup_mapping():
             "account": relationship(Account),
         }
     )
-    mapper_registry.map_imperatively(BillLine, bill_lines_table)
+    mapper_registry.map_imperatively(
+        BillLine,
+        bill_lines_table,
+        properties={
+            "bill": relationship(Bill),
+        }
+    )
     mapper_registry.map_imperatively(
         Subscription, 
         subscriptions_table,
