@@ -2,6 +2,7 @@ from datetime import datetime
 
 import attrs
 
+from src.domain.models.subscription import Subscription
 from src.domain.models.bill import Bill
 
 
@@ -18,3 +19,5 @@ class BillLine:
     term_start_date: datetime
     term_end_date: datetime
     bill: Bill
+    subscription: Subscription
+    subscription_id: str

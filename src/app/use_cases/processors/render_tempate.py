@@ -19,13 +19,28 @@ class RenderTemplateUseCase:
 
     def execute(self, command: RenderTemplateCommand):
         with self._uow:
+            bill = self._uow.bill_repository.find_by_id(command.bill_id)
+            bill = attrs.asdict(bill)
+
             bill_lines = self._uow.bill_line_repository.find_bill_lines_by_bill_id(
                 command.bill_id
             )
+
             bill_lines = [attrs.asdict(bill_line) for bill_line in bill_lines]
+
+            subscription_ids = [bill_line.get("subscription").get("id") for bill_line in bill_lines]
+            metas = self._uow.subscription_meta_repository.find_by_subscription_ids(subscription_ids)
+            metas = [meta._asdict() for meta in metas]
+
+            meta_mapping = {str(meta["subscription_id"]): meta for meta in metas}
+
+            for bill_line in bill_lines:
+                if str(bill_line["subscription_id"]) in meta_mapping:
+                    bill_line["subscription"]["meta"] = meta_mapping.get(bill_line["subscription_id"])
+
             pdf_bill_processor = PDFBillProcessor()
             return pdf_bill_processor.generate_template(
-                bill_id=command.bill_id,
+                bill=bill,
                 type=command.type,
-                bill_data=bill_lines
+                bill_lines=bill_lines
             )

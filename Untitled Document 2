@@ -3,9 +3,92 @@
     - bill_lines
       - group by related_ref (gộp lại bởi 1 dòng xanh đậm)
 
-[
 {
-"project": "LAMDT1030@PIKAB.IN",
-""
+  "account": "lamdt1030@pikab.in",
+  "created_date": "06/04/2024",
+  "start_date": "06/04/2024",
+  "end_date": "30/04/2024",
+  "projects": [
+    {
+      "project_name": "LAMDT1030@PIKAB.IN",
+      "project_subtotal": "933.189,13",
+      "project_total_discount": "0,00",
+      "project_total_after_discount": "933.189,13",
+      "project_paid_total": "0,00",
+      "proejct_unpaid_total": "933.189,13",
+      "regions": [
+        {
+          "region_name": "HaNoi",
+          "region_paid_total": "0",
+          "region_unpaid_total: "460.520",
+          "region_total": "460.520",
+          "related_ref_bill_lines": [
+            {
+              "related_ref_name": "ubuntu-2vcpu-2gb-1-05fct",
+              "related_ref_term_start_date": "06/04/2024",
+              "related_ref_term_end_date": "06/04/2024",
+              "related_ref_subtotal": "460.520,33",
+              "related_ref_total_discount": "0,00",
+              "related_ref_after_discount": "460.520,33",
+              "related_ref_paid_total": "0,00",
+              "related_ref_unpaid_total": "460.520,33",
+              "bill_lines": [
+                {
+                  "resource_name": "saving_plan_cpu Premium ubuntu2vcpu-2gb-1-05fct CPU 2CORE",
+                  "term_start_date": "09:07 06/04/2024",  # từ ngày
+                  "term_end_date": "09:07 06/04/2024",    # đến ngày
+                  "quantity": "591",                      # sử dụng
+                  "subtotal": "210.987,00",               # chi phí
+                  "discount_percent": "0",                # chiết khấu
+                  "total_discount": "0,00",               # tiền chiết khấu
+                  "total_after_discount": "210.987,00",   # chi phí sau chiết khấu
+                  "paid_total": "0,00",                   # đã thanh toán
+                  "unpaid_total": "210.987,00",           # chưa thanh toán
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
+
+
+[
+  {
+    "project_name": "LAMDT1030@PIKAB.IN",
+    "regions": [
+      {
+        "region_name": "HaNoi",
+        "region_paid_total": "0",
+        "region_unpaid_total: "460.520",
+        "region_total": "460.520",
+        "related_ref_bill_lines": [
+          {
+            "related_ref_name": "ubuntu-2vcpu-2gb-1-05fct",
+            "related_ref_term_start_date": "06/04/2024",
+            "related_ref_term_end_date": "06/04/2024",
+            "related_ref_subtotal": "460.520,33",
+            "related_ref_after_discount": "460.520,33",
+            "related_ref_paid_total": "0,00",
+            "related_ref_unpaid_total": "460.520,33",
+            "bill_lines": [
+              {
+                "resource_name": "saving_plan_cpu Premium ubuntu2vcpu-2gb-1-05fct CPU 2CORE",
+                "term_start_date": "09:07 06/04/2024",
+                "term_end_date": "09:07 06/04/2024",
+                "quantity": "591",
+                "subtotal": "210.987,00",
+                "discount_percent": "0",
+                "total_after_discount": "210.987,00",
+                "paid_total": "0,00",
+                "unpaid_total": "210.987,00",
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 ]

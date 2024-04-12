@@ -8,6 +8,7 @@ bills_table = Table(
     "bills",
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
+    Column("_created", DateTime),
     Column("subtotal", Integer),
     Column("total", Integer),
     Column("term_start_date", DateTime),
@@ -37,16 +38,19 @@ bill_lines_table = Table(
     Column("term_start_date", DateTime),
     Column("term_end_date", DateTime),
     Column("bill_id", String, ForeignKey("bills.id")),
+    Column("subscription_id", String, ForeignKey("v4_subscriptions.id")),
 )
 
 subscriptions_table = Table(
     "v4_subscriptions",
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
+    Column("region_name", String),
     Column("resource_name", String),
     Column("resource_type", String),
     Column("related_ref", String),
-    Column("category_id", String, ForeignKey("v4_categories.id"))
+    Column("category_id", String, ForeignKey("v4_categories.id")),
+    Column("plan_id", String, ForeignKey("plans.id")),
 )
 
 categories_table = Table(
@@ -60,6 +64,7 @@ products_table = Table(
     "v4_products",
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
+    Column("summary", String),
     Column("quantity_unit", String),
 )
 

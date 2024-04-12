@@ -17,6 +17,7 @@ def setup_mapping():
         bill_lines_table,
         properties={
             "bill": relationship(Bill),
+            "subscription": relationship(Subscription),
         }
     )
     mapper_registry.map_imperatively(
@@ -24,6 +25,7 @@ def setup_mapping():
         subscriptions_table,
         properties={
             "category": relationship(Category),
+            "plan": relationship(Plan),
         }
     )
     mapper_registry.map_imperatively(

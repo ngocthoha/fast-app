@@ -1,5 +1,5 @@
-{% macro render(users) %}
-    {% set users = users %}
+{% macro render(header_data) %}
+    {% set header_data = header_data %}
     <div class="header">
         <div class="row mt-3">
             <div class="col-4">
@@ -14,20 +14,20 @@
         </div>
         <div class="row mt-3">
             <div class="col-4">
-                {% for user in users %}
+                {% for header in header_data %}
                     <p>
                         <b>Tài khoản:</b>
-                        {{ user.account }}
+                        {{ header.account }}
                     </p>
                     <p>
                         <b>Ngày tạo:</b>
-                        {{ user.date }}
+                        {{ header.created_date }}
                     </p>
                     <p>
                         <b>Kỳ từ:</b>
-                        {{ user.start_date }}
+                        {{ header.start_date }}
                         đến
-                        {{ user.end_date }}
+                        {{ header.end_date }}
                     </p>
                 {% endfor %}
             </div>

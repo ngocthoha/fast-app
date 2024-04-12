@@ -1,5 +1,6 @@
 {% import "header.html.j2" as Header %}
 {% import "overview.html.j2" as Overview %}
+{% import "table.html.j2" as Table %}
 
 <!DOCTYPE html>
 <html>
@@ -11,8 +12,9 @@
 </head>
 
 <body>
-    {{ Header.render([]) }}
+    {{ Header.render(header_data) }}
     {{ Overview }}
+    {{ Table }}
 </body>
 
 </html>

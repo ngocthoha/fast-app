@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
 from logging import Logger, getLogger
 import subprocess
 from jinja2 import Environment, FileSystemLoader
 import os
 import pdfkit
+import dateutil.parser
+from src.utils.billing_date_time import parse_current_time
 
 LOG: Logger = getLogger(__name__)
 
@@ -36,18 +39,55 @@ class BillProcessor(ABC):
     def _get_filepath(self, filename: str) -> str:
         return os.path.join(self.WORKDIR, filename)
 
+    def _parse_resource_name(self, subscription: str):
+        product = subscription.get("plan", {}).get("product").get("summary")
+        resource_name = subscription.get("resource_name")
+        category = subscription.get("category", {}).get("summary")
+        quantity = int(subscription.get("meta", {}).get("init_quantity"))
+        quantity_unit = (
+            subscription.get("plan", {}).get("product").get("quantity_unit").upper()
+        )
+        return f"{product} {category}: {resource_name} {quantity}{quantity_unit}"
+
+    def _prepare_header_data(self, bill: dict):
+        _created = bill.get("_created", {})
+        header_data = {
+            "account": bill.get("account").get("email"),
+            "created_date": _created,
+            "start_date": bill.get("term_start_date"),
+            "end_date": bill.get("term_end_date"),
+        }
+        return [header_data]
+
+
+    def _prepare_bill_data(self, bill_lines):
+        """
+        Prepares data for rendering template
+        """
+        list_bill_line = []
+        for bill_line in bill_lines:
+            list_bill_line.append(
+                {
+                    "resource_name": self._parse_resource_name(bill_line.get("subscription")),
+                    "term_start_date": bill_line.get("term_start_date"),
+                    "term_end_date": bill_line.get("term_end_date"),
+                    "quantity": bill_line.get("quantity"),
+                    "subtotal": bill_line.get("subtotal"),
+                    "discount_percent": bill_line.get("discount_percent"),
+                    "total_discount": bill_line.get("subtotal") - bill_line.get("total"),
+                    "paid_total": bill_line.get("total"),
+                    "unpaid_total": bill_line.get("total")
+                }
+            )
+        
+        return list_bill_line
+
     def _render_template(self, filename: str, payload: dict, template_name: str = "bill"):
         """
         Renders the appropriate template
         """
         if self._render_type == RenderType.PDF:
             return self._render_pdf_template(filename, payload, template_name)
-
-    def _prepare_data(bill_lines):
-        """
-        Prepares data for rendering template
-        """
-        pass
 
     def _render_pdf_template(
             self,
