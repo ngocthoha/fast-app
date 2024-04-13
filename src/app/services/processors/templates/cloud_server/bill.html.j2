@@ -13,8 +13,8 @@
 
 <body>
     {{ Header.render(header_data) }}
-    {{ Overview }}
-    {{ Table }}
+    {{ Overview.render(project_data, total_bill) }}
+    {{ Table.render(bill_data) }}
 </body>
 
 </html>

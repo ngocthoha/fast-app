@@ -27,12 +27,17 @@ class BillProcessor(ABC):
         minimum_font_size: str = "5"
 
     def __init__(self):
-        # self._jinja_env = Environment(
-        #     loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
-        # )
         self._jinja_env = Environment(
-            loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
+            loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
         )
+        self._jinja_env.globals.update(
+            {
+                "get_group_summary": BillProcessor.get_group_summary,
+            }
+        )
+        # self._jinja_env = Environment(
+        #     loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
+        # )
 
     @property
     @abstractmethod
@@ -42,7 +47,14 @@ class BillProcessor(ABC):
     def _get_filepath(self, filename: str) -> str:
         return os.path.join(self.WORKDIR, filename)
 
-    def _parse_resource_name(self, subscription: str):
+    @classmethod
+    def get_group_summary(cls, groups):
+        for group in groups:
+            if "RAM" in group.get("summary") or "CPU" in group.get("summary"):
+                return group.get("summary").split()[0]
+        return ""
+
+    def _get_resource_summary(self, subscription: str):
         product = subscription.get("plan", {}).get("product").get("summary")
         resource_name = subscription.get("resource_name")
         category = subscription.get("category", {}).get("summary")
@@ -85,15 +97,19 @@ class BillProcessor(ABC):
         for bill_line in bill_lines:
             list_bill_line.append(
                 {
+                    "id": bill_line.get("id"),
+                    "summary": bill_line.get("summary"),
                     "project_name": bill_line.get("bill", {}).get("account", {}).get("email"),
                     "region_name": bill_line.get("subscription", {}).get("region_name"),
-                    "resource_name": self._parse_resource_name(bill_line.get("subscription")),
-                    "term_start_date": bill_line.get("term_start_date"),
-                    "term_end_date": bill_line.get("term_end_date"),
+                    "resource_summary": self._get_resource_summary(bill_line.get("subscription")),
+                    "related_ref": bill_line.get("subscription", {}).get("related_ref"),
+                    "term_start_date": bill_line.get("term_start_date").strftime("%H:%M %d/%m/%Y"),
+                    "term_end_date": bill_line.get("term_end_date").strftime("%H:%M %d/%m/%Y"),
                     "quantity": bill_line.get("quantity"),
                     "subtotal": bill_line.get("subtotal"),
                     "discount_percent": bill_line.get("discount_percent"),
-                    "total_discount": bill_line.get("subtotal") - bill_line.get("total"),
+                    "discount_total": bill_line.get("subtotal") - bill_line.get("total"),
+                    "final_total": bill_line.get("subtotal") - bill_line.get("total"),
                     "paid_total": bill_line.get("total"),
                     "unpaid_total": bill_line.get("total")
                 }
@@ -122,13 +138,13 @@ class BillProcessor(ABC):
             wkhtmltox_config = self.WKHtmlToPDFConfig()
 
         filepath = self._get_filepath(filename)
-        # in_filepath = f"{filepath}.html"
-        # out_filepath = f"{filepath}.pdf"
-        in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
-        out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
+        in_filepath = f"{filepath}.html"
+        out_filepath = f"{filepath}.pdf"
+        # in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
+        # out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
         template = self._jinja_env.get_template(f"{template_name}.html.j2")
-        # css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
-        css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
+        css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        # css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
 
         rendered_template = template.render(
             css_path=css_path,
