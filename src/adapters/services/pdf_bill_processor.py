@@ -8,11 +8,14 @@ class PDFBillProcessor(BillProcessor):
     def generate_template(self, bill: dict, type: str = None, bill_lines: list = []):
         bill_id = bill.get("id")
         header_data = self._prepare_header_data(bill)
+        project_data, total_bill = self._prepare_project_data(bill)
         bill_data = self._prepare_bill_data(bill_lines)
         payload = {
             "bill_id": bill_id,
             "type": type,
             "header_data": header_data,
+            "project_data": project_data,
+            "total_bill": total_bill,
             "bill_data": bill_data,
         }
 

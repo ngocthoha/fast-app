@@ -27,8 +27,11 @@ class BillProcessor(ABC):
         minimum_font_size: str = "5"
 
     def __init__(self):
+        # self._jinja_env = Environment(
+        #     loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
+        # )
         self._jinja_env = Environment(
-            loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
+            loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
         )
 
     @property
@@ -59,8 +62,22 @@ class BillProcessor(ABC):
         }
         return [header_data]
 
+    def _prepare_project_data(self, bill: dict):
+        project_data = []
+        project_data.append(
+            {
+                "index": 1,
+                "project_name": bill.get("account", {}).get("email"),
+                "total_bill_unpaid": bill.get("total")
+            }
+        )
+        total_bill = 0
+        for project in project_data:
+            total_bill += project.get("total_bill_unpaid")
 
-    def _prepare_bill_data(self, bill_lines):
+        return project_data, total_bill
+
+    def _prepare_bill_data(self, bill_lines: list):
         """
         Prepares data for rendering template
         """
@@ -68,6 +85,8 @@ class BillProcessor(ABC):
         for bill_line in bill_lines:
             list_bill_line.append(
                 {
+                    "project_name": bill_line.get("bill", {}).get("account", {}).get("email"),
+                    "region_name": bill_line.get("subscription", {}).get("region_name"),
                     "resource_name": self._parse_resource_name(bill_line.get("subscription")),
                     "term_start_date": bill_line.get("term_start_date"),
                     "term_end_date": bill_line.get("term_end_date"),
@@ -103,10 +122,13 @@ class BillProcessor(ABC):
             wkhtmltox_config = self.WKHtmlToPDFConfig()
 
         filepath = self._get_filepath(filename)
-        in_filepath = f"{filepath}.html"
-        out_filepath = f"{filepath}.pdf"
+        # in_filepath = f"{filepath}.html"
+        # out_filepath = f"{filepath}.pdf"
+        in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
+        out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
         template = self._jinja_env.get_template(f"{template_name}.html.j2")
-        css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        # css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
 
         rendered_template = template.render(
             css_path=css_path,

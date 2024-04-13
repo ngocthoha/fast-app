@@ -11,9 +11,7 @@ class SQLBillLineRepository(BillLineRepository):
 
     def find_bill_lines_by_bill_id(self, bill_id: str):
         query = (
-            self.session.query(
-                BillLine
-            )
+            self.session.query(BillLine)
             .join(Bill)
             .join(Subscription)
             .filter(Bill.id == bill_id)
