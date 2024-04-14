@@ -33,14 +33,28 @@ class RenderTemplateUseCase:
             metas = [meta._asdict() for meta in metas]
 
             meta_mapping = {str(meta["subscription_id"]): meta for meta in metas}
+            related_ref_mapping = {}
 
             for bill_line in bill_lines:
                 if str(bill_line["subscription_id"]) in meta_mapping:
                     bill_line["subscription"]["meta"] = meta_mapping.get(bill_line["subscription_id"])
 
+                related_ref = bill_line.get("subscription").get("related_ref")
+                if related_ref not in related_ref_mapping:
+                    related_ref_mapping[related_ref] = False
+                else:
+                    related_ref_mapping[related_ref] = True
+
+            for bill_line in bill_lines:
+                related_ref = bill_line.get("subscription").get("related_ref")
+                if related_ref_mapping[related_ref]:
+                    bill_line["has_same_related_ref"] = True
+                else:
+                    bill_line["has_same_related_ref"] = False
+            
             pdf_bill_processor = PDFBillProcessor()
             return pdf_bill_processor.generate_template(
                 bill=bill,
                 type=command.type,
-                bill_lines=bill_lines
+                bill_lines=bill_lines,
             )

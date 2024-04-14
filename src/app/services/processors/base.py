@@ -27,17 +27,22 @@ class BillProcessor(ABC):
         minimum_font_size: str = "5"
 
     def __init__(self):
+        # self._jinja_env = Environment(
+        #     loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
+        # )
         self._jinja_env = Environment(
-            loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
+            loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
         )
         self._jinja_env.globals.update(
             {
                 "get_group_summary": BillProcessor.get_group_summary,
             }
         )
-        # self._jinja_env = Environment(
-        #     loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
-        # )
+        self._jinja_env.filters.update(
+            {
+                "filter_bill_lines_by_attr": BillProcessor.filter_bill_lines_by_attr
+            }
+        )
 
     @property
     @abstractmethod
@@ -46,6 +51,14 @@ class BillProcessor(ABC):
 
     def _get_filepath(self, filename: str) -> str:
         return os.path.join(self.WORKDIR, filename)
+
+    @classmethod
+    def filter_bill_lines_by_attr(self, bill_lines, attr=None, falsy=False):
+        if attr is None:
+            return bill_lines
+        if falsy:
+            return list(filter(lambda x: not x[attr], bill_lines))
+        return list(filter(lambda x: x[attr], bill_lines))
 
     @classmethod
     def get_group_summary(cls, groups):
@@ -111,7 +124,8 @@ class BillProcessor(ABC):
                     "discount_total": bill_line.get("subtotal") - bill_line.get("total"),
                     "final_total": bill_line.get("subtotal") - bill_line.get("total"),
                     "paid_total": bill_line.get("total"),
-                    "unpaid_total": bill_line.get("total")
+                    "unpaid_total": bill_line.get("total"),
+                    "has_same_related_ref": bill_line.get("has_same_related_ref"),
                 }
             )
         
@@ -138,13 +152,13 @@ class BillProcessor(ABC):
             wkhtmltox_config = self.WKHtmlToPDFConfig()
 
         filepath = self._get_filepath(filename)
-        in_filepath = f"{filepath}.html"
-        out_filepath = f"{filepath}.pdf"
-        # in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
-        # out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
+        # in_filepath = f"{filepath}.html"
+        # out_filepath = f"{filepath}.pdf"
+        in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
+        out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
         template = self._jinja_env.get_template(f"{template_name}.html.j2")
-        css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
-        # css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
+        # css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
 
         rendered_template = template.render(
             css_path=css_path,

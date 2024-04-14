@@ -45,4 +45,4 @@ def generate_template(
         logging.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
     # return templates.TemplateResponse("bd416a7e-1bec-45be-955f-b101c3375e12.pdf", context= {"request": request}) 
-    return FileResponse(template, media_type='application/pdf')
+    return FileResponse("D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf", media_type='application/pdf')
