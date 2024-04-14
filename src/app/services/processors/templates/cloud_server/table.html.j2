@@ -45,9 +45,10 @@
                     <td class="text-right">{{ region_group|sum(attribute='unpaid_total') }}</td>
                     </td>
                 </tr>
+                {% set index = 1 %}
                 {% for group, bill_line_group in region_group|groupby("related_ref") %}
                     <tr class="title-line">
-                        <td class="text-center">1</td>
+                        <td class="text-center"> {{ index }} </td>
                         <td class="text-left"> {{ get_group_summary(bill_line_group) }}</td>
                         <td class="text-center"> term_start_date </td>
                         <td class="text-center"> term_end_date </td>
@@ -59,6 +60,7 @@
                         <td class="text-right"> {{ bill_line_group|sum(attribute='paid_total') }} </td>
                         <td class="text-right"> {{ bill_line_group|sum(attribute='unpaid_total') }} </td>
                     </tr>
+                    {% index = index + 1 %}
                     {% for bill_line in bill_line_group %}
                         <tr>
                             <td class="text-center"></td>
