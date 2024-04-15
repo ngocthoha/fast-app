@@ -4,7 +4,7 @@ import json
 import attrs
 from src.app.services.unit_of_work import UnitOfWork
 from src.adapters.services import CloudServerBillProcessor
-
+from src.dependencies import unit_of_work_custom
 
 
 @dataclass
@@ -25,7 +25,6 @@ class RenderTemplateUseCase:
             bill_lines = self._uow.bill_line_repository.find_bill_lines_by_bill_id(
                 command.bill_id
             )
-
             bill_lines = [attrs.asdict(bill_line) for bill_line in bill_lines]
 
             subscription_ids = [bill_line.get("subscription").get("id") for bill_line in bill_lines]
@@ -51,9 +50,13 @@ class RenderTemplateUseCase:
                     bill_line["has_same_related_ref"] = True
                 else:
                     bill_line["has_same_related_ref"] = False
+
+            with unit_of_work_custom:
+                bill_type = bill.get("service", {}).get("name")
+                unit_of_work_custom.template_repository.find_active_templates(bill_type)
             
-            pdf_bill_processor = CloudServerBillProcessor()
-            return pdf_bill_processor.generate_template(
+            cloud_server_bill_processor = CloudServerBillProcessor()
+            return cloud_server_bill_processor.generate_template(
                 bill=bill,
                 type=command.type,
                 bill_lines=bill_lines,

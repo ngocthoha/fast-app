@@ -1,5 +1,5 @@
-from src.domain.models import Bill, Account, BillLine, Subscription, SubscriptionMeta, Plan, Product, Category
-from .tables import mapper_registry, bills_table, accounts_table, bill_lines_table, subscriptions_table, subscription_metas_table, plans_table, products_table, categories_table
+from src.domain.models import Bill, Account, BillLine, Subscription, SubscriptionMeta, Plan, Product, Category, Service
+from .tables import mapper_registry, bills_table, accounts_table, bill_lines_table, subscriptions_table, subscription_metas_table, plans_table, products_table, categories_table, services_table
 from sqlalchemy.orm import relationship
 
 
@@ -10,6 +10,7 @@ def setup_mapping():
         bills_table,
         properties={
             "account": relationship(Account),
+            "service": relationship(Service),
         }
     )
     mapper_registry.map_imperatively(
@@ -44,3 +45,4 @@ def setup_mapping():
     )
     mapper_registry.map_imperatively(Product, products_table)
     mapper_registry.map_imperatively(Category, categories_table)
+    mapper_registry.map_imperatively(Service, services_table)

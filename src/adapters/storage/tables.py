@@ -83,16 +83,24 @@ subscription_metas_table = Table(
     Column("subscription_id", String, ForeignKey("v4_subscriptions.id"))
 )
 
-# from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
-# engine = create_engine('postgresql://postgres:postgres@localhost:6868/postgres', echo = True)
-# meta = MetaData()
+services_table = Table(
+    "services",
+    mapper_registry.metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String),
+)
 
-# templates_table = Table(
-#    'templates', meta, 
-#    Column('id', String, primary_key = True), 
-#    Column('name', String), 
-#    Column('type', String),
-#    Column('start_date', DateTime),
-#    Column('end_date', DateTime),
-# )
+
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo = True)
+meta = MetaData()
+
+templates_table = Table(
+   'templates', meta, 
+   Column('id', String, primary_key = True), 
+   Column('name', String), 
+   Column('type', String),
+   Column('start_date', DateTime),
+   Column('end_date', DateTime),
+)
 # meta.create_all(engine)

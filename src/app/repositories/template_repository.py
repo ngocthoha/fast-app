@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Optional
-from src.domain.models import Bill
+from typing import List
+from src.domain.models import Template
 
 
 class TemplateRepository(ABC):
 
     @abstractmethod
-    def find_active_template(self, bill_type: str) -> Optional[Bill]:
+    def find_active_templates(self, bill_type: str) -> List[Template]:
         pass

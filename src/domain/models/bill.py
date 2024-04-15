@@ -1,5 +1,6 @@
 from datetime import datetime
 from .account import Account
+from .service import Service
 import attrs
 
 
@@ -12,3 +13,4 @@ class Bill:
     term_start_date: datetime
     term_end_date: datetime
     account: Account
+    service: Service

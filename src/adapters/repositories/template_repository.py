@@ -1,6 +1,6 @@
-from src.domain.models.account import Account
+from typing import List
 from src.app.repositories import TemplateRepository
-from src.domain.models import Bill
+from src.domain.models import Template
 
 
 class SQLTemplateRepository(TemplateRepository):
@@ -8,11 +8,9 @@ class SQLTemplateRepository(TemplateRepository):
     def __init__(self, session):
         self.session = session
 
-    def find_active_template(self, bill_type: str):
-        bill = (
-            self.session.query(Bill)
-            .join(Account)
-            .filter(Bill.id == bill_id)
-            .first()
+    def find_active_templates(self, bill_type: str) -> List[Template]:
+        query = (
+            self.session.query(Template)
+            .filter(Template.type == bill_type)
         )
-        return bill
+        return query.all()

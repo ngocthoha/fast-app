@@ -1,5 +1,5 @@
 from src.adapters.repositories.bill_line_repository import SQLBillLineRepository
-from src.adapters.repositories import SQLBillRepository, SQLSubscriptionMetaRepository
+from src.adapters.repositories import SQLBillRepository, SQLSubscriptionMetaRepository, SQLTemplateRepository
 from src.app.services import UnitOfWork
 
 
@@ -12,6 +12,7 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
         self.bill_repository = SQLBillRepository(self.session)
         self.bill_line_repository = SQLBillLineRepository(self.session)
         self.subscription_meta_repository = SQLSubscriptionMetaRepository(self.session)
+        self.template_repository = SQLTemplateRepository(self.session)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.rollback()
