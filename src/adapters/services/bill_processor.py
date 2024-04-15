@@ -1,14 +1,14 @@
 from src.app.services.processors.base import BillProcessor, RenderType
 
 
-class PDFBillProcessor(BillProcessor):
+class CloudServerBillProcessor(BillProcessor):
     template_directory: str = "cloud_server"
     _render_type = RenderType.PDF
 
     def generate_template(self, bill: dict, type: str = None, bill_lines: list = []):
         bill_id = bill.get("id")
         header_data = self._prepare_header_data(bill)
-        project_data, total_bill = self._prepare_project_data(bill)
+        project_data, total_bill = self._prepare_project_data(bill, bill_lines)
         bill_data = self._prepare_bill_data(bill_lines)
         payload = {
             "bill_id": bill_id,

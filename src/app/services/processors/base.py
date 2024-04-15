@@ -11,9 +11,20 @@ from src.utils.billing_date_time import parse_current_time
 
 LOG: Logger = getLogger(__name__)
 
+
+class BillType:
+    CLOUD_SERVER = "cloud_server"
+    CLOUD_DATABASE = "dbaas"
+
+
 class RenderType:
     PDF = "PDF"
     CSV = "CSV"
+
+
+class BillStatus:
+    PAID = "paid"
+    UNPAID = "unpaid"
 
 
 class BillProcessor(ABC):
@@ -27,20 +38,22 @@ class BillProcessor(ABC):
         minimum_font_size: str = "5"
 
     def __init__(self):
-        # self._jinja_env = Environment(
-        #     loader=FileSystemLoader(f'{"/".join(__file__.split("/")[:-1])}/templates/{self.template_directory}/')
-        # )
         self._jinja_env = Environment(
-            loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
+            loader=FileSystemLoader(f'src/templates/{self.template_directory}/')
         )
+        # self._jinja_env = Environment(
+        #     loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
+        # )
         self._jinja_env.globals.update(
             {
                 "get_group_summary": BillProcessor.get_group_summary,
+                "get_group_start_date": BillProcessor.get_group_start_date,
+                "get_group_end_date": BillProcessor.get_group_end_date,
             }
         )
         self._jinja_env.filters.update(
             {
-                "filter_bill_lines_by_attr": BillProcessor.filter_bill_lines_by_attr
+                "format_currency": BillProcessor.format_currency,
             }
         )
 
@@ -53,12 +66,36 @@ class BillProcessor(ABC):
         return os.path.join(self.WORKDIR, filename)
 
     @classmethod
-    def filter_bill_lines_by_attr(self, bill_lines, attr=None, falsy=False):
-        if attr is None:
-            return bill_lines
-        if falsy:
-            return list(filter(lambda x: not x[attr], bill_lines))
-        return list(filter(lambda x: x[attr], bill_lines))
+    def format_currency(self, number):
+        import locale
+
+        locale.setlocale(locale.LC_ALL, 'vi_VN.UTF-8')
+        return locale.format_string("%.2f", number, grouping=True)
+
+    def _get_active_template(self, bill_type):
+        pass
+
+    @classmethod
+    def get_group_start_date(cls, groups):
+        def extract_date(date_str):
+            return datetime.strptime(date_str, "%H:%M %d/%m/%Y")
+
+        sorted_groups = sorted(
+            groups,
+            key=lambda x: extract_date(x["term_start_date"]),
+        )
+        return datetime.strptime(sorted_groups[0]["term_start_date"], "%H:%M %d/%m/%Y").strftime("%d/%m/%Y")
+
+    @classmethod
+    def get_group_end_date(cls, groups):
+        def extract_date(date_str):
+            return datetime.strptime(date_str, "%H:%M %d/%m/%Y")
+
+        sorted_groups = sorted(
+            groups,
+            key=lambda x: extract_date(x["term_end_date"]),
+        )
+        return datetime.strptime(sorted_groups[-1]["term_end_date"], "%H:%M %d/%m/%Y").strftime("%d/%m/%Y")
 
     @classmethod
     def get_group_summary(cls, groups):
@@ -87,18 +124,67 @@ class BillProcessor(ABC):
         }
         return [header_data]
 
-    def _prepare_project_data(self, bill: dict):
+    @classmethod
+    def convert_to_custom_format(cls, number):
+        # Convert the string to a float and then format it with commas and periods
+        parts = "{:,.2f}".format(float(number)).split('.')
+
+        # Replace the commas with periods and add commas as thousands separators
+        formatted_number = parts[0].replace(',', '.') + ',' + parts[1]
+
+        return formatted_number
+
+    def _get_total_bill(self, bill_lines: list):
+        unpaid_total = 0
+        paid_total = 0
+        subtotal = 0
+        subtotal_discount = 0
+        for bill_line in bill_lines:
+            paid_total += (
+                bill_line.get("total")
+                if bill_line.get("status") == BillStatus.PAID
+                else 0
+            )
+            unpaid_total += (
+                bill_line.get("total")
+                if bill_line.get("status") == BillStatus.UNPAID
+                else 0
+            )
+            subtotal += bill_line.get("subtotal")
+            discount_total = (
+                int(bill_line.get("subtotal"))
+                * bill_line.get("discount_percent", {})
+                / 100
+            )
+            discount_after = int(bill_line.get("subtotal")) - discount_total
+            subtotal_discount += discount_after
+
+        paid_total = f"{paid_total:,}".replace(",", ".")
+        unpaid_total = BillProcessor.format_currency(unpaid_total)
+        subtotal = f"{subtotal:,}".replace(",", ".")
+        subtotal_discount = f"{int(subtotal_discount):,}".replace(",", ".")
+
+        total_bill = [
+            {
+                "subtotal": subtotal,
+                "unpaid_total": unpaid_total,
+                "paid_total": paid_total,
+                "subtotal_discount": subtotal_discount,
+            }
+        ]
+
+        return total_bill, unpaid_total
+
+
+    def _prepare_project_data(self, bill: dict, bill_lines: list):
+        total_bill, unpaid_total = self._get_total_bill(bill_lines)
         project_data = []
         project_data.append(
             {
-                "index": 1,
                 "project_name": bill.get("account", {}).get("email"),
-                "total_bill_unpaid": bill.get("total")
+                "unpaid_total": unpaid_total
             }
         )
-        total_bill = 0
-        for project in project_data:
-            total_bill += project.get("total_bill_unpaid")
 
         return project_data, total_bill
 
@@ -118,7 +204,7 @@ class BillProcessor(ABC):
                     "related_ref": bill_line.get("subscription", {}).get("related_ref"),
                     "term_start_date": bill_line.get("term_start_date").strftime("%H:%M %d/%m/%Y"),
                     "term_end_date": bill_line.get("term_end_date").strftime("%H:%M %d/%m/%Y"),
-                    "quantity": bill_line.get("quantity"),
+                    "quantity": int(bill_line.get("quantity")),
                     "subtotal": bill_line.get("subtotal"),
                     "discount_percent": bill_line.get("discount_percent"),
                     "discount_total": bill_line.get("subtotal") - bill_line.get("total"),
@@ -152,13 +238,13 @@ class BillProcessor(ABC):
             wkhtmltox_config = self.WKHtmlToPDFConfig()
 
         filepath = self._get_filepath(filename)
-        # in_filepath = f"{filepath}.html"
-        # out_filepath = f"{filepath}.pdf"
-        in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
-        out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
+        in_filepath = f"{filepath}.html"
+        out_filepath = f"{filepath}.pdf"
+        # in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
+        # out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
         template = self._jinja_env.get_template(f"{template_name}.html.j2")
-        # css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
-        css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
+        css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        # css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
 
         rendered_template = template.render(
             css_path=css_path,

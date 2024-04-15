@@ -3,7 +3,7 @@ import json
 
 import attrs
 from src.app.services.unit_of_work import UnitOfWork
-from src.adapters.services import PDFBillProcessor
+from src.adapters.services import CloudServerBillProcessor
 
 
 
@@ -52,7 +52,7 @@ class RenderTemplateUseCase:
                 else:
                     bill_line["has_same_related_ref"] = False
             
-            pdf_bill_processor = PDFBillProcessor()
+            pdf_bill_processor = CloudServerBillProcessor()
             return pdf_bill_processor.generate_template(
                 bill=bill,
                 type=command.type,

@@ -1,4 +1,4 @@
 from .sql_unit_of_work import SQLAlchemyUnitOfWork
-from .pdf_bill_processor import PDFBillProcessor
+from .bill_processor import CloudServerBillProcessor
 
-__all__ = ["SQLAlchemyUnitOfWork", "PDFBillProcessor"]
+__all__ = ["SQLAlchemyUnitOfWork", "CloudServerBillProcessor"]

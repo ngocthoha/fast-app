@@ -15,10 +15,11 @@
         </tr>
         </thead>
         <tbody>
+        {% set vars = {"index": 1} %}
         {% for project in project_data %}
             <tr>
                 <td class="text-center">
-                    <b>{{ project.index }}</b>
+                    <b>{{ vars.index }}</b>
                 </td>
                 <td class="text-left">
                     <div>
@@ -26,8 +27,9 @@
                     </div>
                 </td>
 
-                <td class="text-right pr-2">{{ project.total_bill_unpaid }}</td>
+                <td class="text-right pr-2">{{ project.unpaid_total }}</td>
             </tr>
+            {% if vars.update({'index': vars.index + 1}) %} {% endif %}
         {% endfor %}
         <thead>
         <tr class="title-line-bill-total">

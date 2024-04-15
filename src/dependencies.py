@@ -9,9 +9,11 @@ from .app.use_cases.processors import render_tempate
 # Session
 setup_mapping()
 session_factory = create_session_factory(uri=config.DB_URI)
+session_factory_custom = create_session_factory(uri="postgresql://postgres:postgres@localhost:6868/postgres")
 
 # Services
 unit_of_work = SQLAlchemyUnitOfWork(session_factory)
+unit_of_work_custom = SQLAlchemyUnitOfWork(session_factory_custom)
 
 command_bus = CommandBus()
 
