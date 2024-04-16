@@ -13,7 +13,8 @@ bills_table = Table(
     Column("total", Integer),
     Column("term_start_date", DateTime),
     Column("term_end_date", DateTime),
-    Column("account_id", String, ForeignKey("accounts.id"))
+    Column("account_id", String, ForeignKey("accounts.id")),
+    Column("service_id", String, ForeignKey("services.id")),
 )
 
 accounts_table = Table(
@@ -72,6 +73,7 @@ plans_table = Table(
     "plans",
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
+    Column("summary", String),
     Column("product_id", String, ForeignKey("v4_products.id"))
 )
 

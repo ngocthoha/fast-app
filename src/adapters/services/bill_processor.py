@@ -5,6 +5,9 @@ class CloudServerBillProcessor(BillProcessor):
     template_directory: str = "cloud_server"
     _render_type = RenderType.PDF
 
+    def __init__(self, template_id: str = None):
+        super().__init__(template_id)
+
     def generate_template(self, bill: dict, type: str = None, bill_lines: list = []):
         bill_id = bill.get("id")
         header_data = self._prepare_header_data(bill)

@@ -6,7 +6,7 @@ import subprocess
 from jinja2 import Environment, FileSystemLoader
 import os
 import pdfkit
-import dateutil.parser
+from src.utils.choices import PlanSummaryChoices
 from src.utils.billing_date_time import parse_current_time
 
 LOG: Logger = getLogger(__name__)
@@ -22,9 +22,20 @@ class RenderType:
     CSV = "CSV"
 
 
-class BillStatus:
+class BillStatusChoices:
     PAID = "paid"
     UNPAID = "unpaid"
+
+
+RESOURCE_SUMMARY_MAPPING = {
+    PlanSummaryChoices.CDN_DATA_TRANSFER: "Data Transfer",
+    PlanSummaryChoices.S3_DATA_TRANSFER: "Data Transfer",
+    PlanSummaryChoices.S3_DATA_TRANSFER_TRIAL: "Data Transfer",
+    PlanSummaryChoices.S3_STORAGE: "Storage",
+    PlanSummaryChoices.S3_STORAGE_TRIAL: "Storage",
+    PlanSummaryChoices.S3_REQUEST: "Request",
+    PlanSummaryChoices.S3_STANDARD: "Standard",
+}
 
 
 class BillProcessor(ABC):
@@ -37,9 +48,13 @@ class BillProcessor(ABC):
         page_size: str = "A4"
         minimum_font_size: str = "5"
 
-    def __init__(self):
+    def __init__(self, template_id: str = None):
+        self.template_id = template_id
+        template_path = f'src/templates/{self.template_directory}/'
+        if template_id is not None:
+            template_path = f"{template_path}{template_id}/"
         self._jinja_env = Environment(
-            loader=FileSystemLoader(f'src/templates/{self.template_directory}/')
+            loader=FileSystemLoader(template_path)
         )
         # self._jinja_env = Environment(
         #     loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
@@ -100,11 +115,14 @@ class BillProcessor(ABC):
     @classmethod
     def get_group_summary(cls, groups):
         for group in groups:
-            if "RAM" in group.get("summary") or "CPU" in group.get("summary"):
+            if group.get("summary") and ("RAM" in group.get("summary") or "CPU" in group.get("summary")):
                 return group.get("summary").split()[0]
         return ""
 
     def _get_resource_summary(self, subscription: str):
+        if subscription.get("plan", {}).get("summary") in RESOURCE_SUMMARY_MAPPING:
+            return RESOURCE_SUMMARY_MAPPING.get(subscription.get("plan", {}).get("summary"))
+
         product = subscription.get("plan", {}).get("product").get("summary")
         resource_name = subscription.get("resource_name")
         category = subscription.get("category", {}).get("summary")
@@ -121,6 +139,7 @@ class BillProcessor(ABC):
             "created_date": _created,
             "start_date": bill.get("term_start_date"),
             "end_date": bill.get("term_end_date"),
+            "template_id": self.template_id,
         }
         return [header_data]
 
@@ -142,12 +161,12 @@ class BillProcessor(ABC):
         for bill_line in bill_lines:
             paid_total += (
                 bill_line.get("total")
-                if bill_line.get("status") == BillStatus.PAID
+                if bill_line.get("status") == BillStatusChoices.PAID
                 else 0
             )
             unpaid_total += (
                 bill_line.get("total")
-                if bill_line.get("status") == BillStatus.UNPAID
+                if bill_line.get("status") == BillStatusChoices.UNPAID
                 else 0
             )
             subtotal += bill_line.get("subtotal")
@@ -193,7 +212,23 @@ class BillProcessor(ABC):
         Prepares data for rendering template
         """
         list_bill_line = []
+        subscription_mapping = {}
         for bill_line in bill_lines:
+            if bill_line.get("subscription_id") not in subscription_mapping:
+                bill_line["unpaid_total"] = bill_line["total"] if bill_line["status"] == BillStatusChoices.UNPAID else 0
+                bill_line["paid_total"] = bill_line["total"] if bill_line["status"] == BillStatusChoices.PAID else 0
+                subscription_mapping[bill_line.get("subscription_id")] = bill_line
+            else:
+                current_bill_line = subscription_mapping.get(bill_line.get("subscription_id"))
+                current_bill_line["subtotal"] += bill_line["subtotal"]
+                if bill_line["status"] == BillStatusChoices.UNPAID:
+                    current_bill_line["unpaid_total"] += bill_line["total"]
+                if bill_line["status"] == BillStatusChoices.PAID:
+                    current_bill_line["paid_total"] += bill_line["total"]
+
+                subscription_mapping[bill_line.get("subscription_id")] = current_bill_line
+
+        for bill_line in subscription_mapping.values():
             list_bill_line.append(
                 {
                     "id": bill_line.get("id"),
@@ -207,10 +242,10 @@ class BillProcessor(ABC):
                     "quantity": int(bill_line.get("quantity")),
                     "subtotal": bill_line.get("subtotal"),
                     "discount_percent": bill_line.get("discount_percent"),
-                    "discount_total": bill_line.get("subtotal") - bill_line.get("total"),
-                    "final_total": bill_line.get("subtotal") - bill_line.get("total"),
-                    "paid_total": bill_line.get("total"),
-                    "unpaid_total": bill_line.get("total"),
+                    "discount_total": bill_line.get("subtotal") - (bill_line.get("paid_total") + bill_line.get("unpaid_total")),
+                    "final_total": bill_line.get("paid_total") + bill_line.get("unpaid_total"),
+                    "paid_total": bill_line.get("paid_total"),
+                    "unpaid_total": bill_line.get("unpaid_total"),
                     "has_same_related_ref": bill_line.get("has_same_related_ref"),
                 }
             )
@@ -243,12 +278,12 @@ class BillProcessor(ABC):
         # in_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.html"
         # out_filepath = "D:\\BizflyCloud\\fast-app\\bills\\bd416a7e-1bec-45be-955f-b101c3375e12.cloud_server.bill.pdf"
         template = self._jinja_env.get_template(f"{template_name}.html.j2")
-        css_path = f'{"/".join(__file__.split("/")[:-1])}/templates/static/styles.css'
+        css_path = "src/templates/static/styles.css"
         # css_path = "D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\static\\styles.css"
 
         rendered_template = template.render(
             css_path=css_path,
-            **payload
+            **payload,
         )
         with open(in_filepath, "w") as f:
             f.write(rendered_template)

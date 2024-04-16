@@ -1,10 +1,14 @@
 from dataclasses import dataclass
-import json
 
 import attrs
 from src.app.services.unit_of_work import UnitOfWork
 from src.adapters.services import CloudServerBillProcessor
-from src.dependencies import unit_of_work_custom
+from src.utils.choices import TemplateChoices
+
+
+bill_processor_mapping = {
+    TemplateChoices.CLOUD_SERVER: CloudServerBillProcessor
+}
 
 
 @dataclass
@@ -18,6 +22,8 @@ class RenderTemplateUseCase:
         self._uow = uow
 
     def execute(self, command: RenderTemplateCommand):
+        from src.dependencies import unit_of_work_custom
+
         with self._uow:
             bill = self._uow.bill_repository.find_by_id(command.bill_id)
             bill = attrs.asdict(bill)
@@ -52,11 +58,29 @@ class RenderTemplateUseCase:
                     bill_line["has_same_related_ref"] = False
 
             with unit_of_work_custom:
+                from datetime import datetime
+
                 bill_type = bill.get("service", {}).get("name")
-                unit_of_work_custom.template_repository.find_active_templates(bill_type)
-            
-            cloud_server_bill_processor = CloudServerBillProcessor()
-            return cloud_server_bill_processor.generate_template(
+                term_start_date = bill.get("term_start_date").strftime("%Y-%m-%d")
+                term_end_date = bill.get("term_end_date")
+                templates = unit_of_work_custom.template_repository.find_active_templates(bill_type, term_start_date)
+                template_id = None
+                if templates:
+                    mindate = datetime(1970, 1, 1)
+                    sorted_templates = sorted(
+                        templates,
+                        key=lambda x: x.start_date or mindate,
+                        reverse=True
+                    )
+                    if sorted_templates[0].end_date is None or sorted_templates[0].end_date >= term_end_date:
+                        template_id = sorted_templates[0].id
+
+            bill_processor = bill_processor_mapping.get(bill_type)
+            if bill_processor is None:
+                bill_processor = CloudServerBillProcessor
+
+            bp = bill_processor(template_id=template_id)
+            return bp.generate_template(
                 bill=bill,
                 type=command.type,
                 bill_lines=bill_lines,
