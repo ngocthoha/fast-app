@@ -1,0 +1,49 @@
+{% macro render(project_data, total_bill) %}
+    {% set project_data = project_data %}
+    {% set total_bill = total_bill %}
+    <p class="mt-3 text-right">
+        <small>
+            <i>đơn vị thanh toán: VNĐ</i>
+        </small>
+    </p>
+    <table class="mt-1 table project-table">
+        <thead>
+        <tr class="title-line">
+            <th>STT</th>
+            <th>Dự án</th>
+            <th>Chi phí cần thanh toán</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% set vars = {"index": 1} %}
+        {% for project in project_data %}
+            <tr>
+                <td class="text-center">
+                    <b>{{ vars.index }}</b>
+                </td>
+                <td class="text-left">
+                    <div>
+                        <b style="text-transform:uppercase">{{ project.project_name }}</b>
+                    </div>
+                </td>
+
+                <td class="text-right pr-2">{{ project.unpaid_total }}</td>
+            </tr>
+            {% if vars.update({'index': vars.index + 1}) %} {% endif %}
+        {% endfor %}
+        <thead>
+        <tr class="title-line-bill-total">
+            <th></th>
+            <th></th>
+            <th>Tổng: {{ total_bill }}</th>
+        </tr>
+        </thead>
+        </tbody>
+    </table>
+    <p class="mt-1 mb-4 text-right">
+        <small>
+            <i>Chi phí đã bao gồm VAT</i>
+        </small>
+    </p>
+    <hr>
+{% endmacro %}

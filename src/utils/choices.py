@@ -2,6 +2,11 @@ class TemplateChoices:
     CLOUD_SERVER = "cloud_server"
 
 
+class RenderTypeChoices:
+    PDF = "PDF"
+    CSV = "CSV"
+
+
 class PlanSummaryChoices:
     CDN_DATA_TRANSFER = "cdn:data_transfer"
     S3_DATA_TRANSFER = "s3:data_transfer"

@@ -1,24 +1,16 @@
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger, getLogger
-from jinja2 import Environment, FileSystemLoader
-import os
+
 import pdfkit
-from src.utils.choices import PlanSummaryChoices
+from jinja2 import Environment, FileSystemLoader
+
 from src.utils.billing_date_time import parse_current_time
+from src.utils.choices import PlanSummaryChoices, RenderTypeChoices
 
 LOG: Logger = getLogger(__name__)
-
-
-class BillType:
-    CLOUD_SERVER = "cloud_server"
-    CLOUD_DATABASE = "dbaas"
-
-
-class RenderType:
-    PDF = "PDF"
-    CSV = "CSV"
 
 
 class BillStatusChoices:
@@ -49,12 +41,10 @@ class BillProcessor(ABC):
 
     def __init__(self, template_id: str = None):
         self.template_id = template_id
-        template_path = f'src/templates/{self.template_directory}/'
+        template_path = f"src/templates/{self.template_directory}/"
         if template_id is not None:
             template_path = f"{template_path}{template_id}/"
-        self._jinja_env = Environment(
-            loader=FileSystemLoader(template_path)
-        )
+        self._jinja_env = Environment(loader=FileSystemLoader(template_path))
         # self._jinja_env = Environment(
         #     loader=FileSystemLoader('D:\\BizflyCloud\\fast-app\\src\\app\\services\\processors\\templates\\cloud_server\\')
         # )
@@ -83,7 +73,7 @@ class BillProcessor(ABC):
     def format_currency(self, number):
         import locale
 
-        locale.setlocale(locale.LC_ALL, 'vi_VN.UTF-8')
+        locale.setlocale(locale.LC_ALL, "vi_VN.UTF-8")
         return locale.format_string("%.2f", number, grouping=True)
 
     def _get_active_template(self, bill_type):
@@ -98,7 +88,9 @@ class BillProcessor(ABC):
             groups,
             key=lambda x: extract_date(x["term_start_date"]),
         )
-        return datetime.strptime(sorted_groups[0]["term_start_date"], "%H:%M %d/%m/%Y").strftime("%d/%m/%Y")
+        return datetime.strptime(
+            sorted_groups[0]["term_start_date"], "%H:%M %d/%m/%Y"
+        ).strftime("%d/%m/%Y")
 
     @classmethod
     def get_group_end_date(cls, groups):
@@ -109,18 +101,24 @@ class BillProcessor(ABC):
             groups,
             key=lambda x: extract_date(x["term_end_date"]),
         )
-        return datetime.strptime(sorted_groups[-1]["term_end_date"], "%H:%M %d/%m/%Y").strftime("%d/%m/%Y")
+        return datetime.strptime(
+            sorted_groups[-1]["term_end_date"], "%H:%M %d/%m/%Y"
+        ).strftime("%d/%m/%Y")
 
     @classmethod
     def get_group_summary(cls, groups):
         for group in groups:
-            if group.get("summary") and ("RAM" in group.get("summary") or "CPU" in group.get("summary")):
+            if group.get("summary") and (
+                "RAM" in group.get("summary") or "CPU" in group.get("summary")
+            ):
                 return group.get("summary").split()[0]
         return ""
 
     def _get_resource_summary(self, subscription: str):
         if subscription.get("plan", {}).get("summary") in RESOURCE_SUMMARY_MAPPING:
-            return RESOURCE_SUMMARY_MAPPING.get(subscription.get("plan", {}).get("summary"))
+            return RESOURCE_SUMMARY_MAPPING.get(
+                subscription.get("plan", {}).get("summary")
+            )
 
         product = subscription.get("plan", {}).get("product").get("summary")
         resource_name = subscription.get("resource_name")
@@ -189,7 +187,7 @@ class BillProcessor(ABC):
         project_data.append(
             {
                 "project_name": bill.get("account", {}).get("email"),
-                "unpaid_total": unpaid_total
+                "unpaid_total": unpaid_total,
             }
         )
 
@@ -203,57 +201,81 @@ class BillProcessor(ABC):
         subscription_mapping = {}
         for bill_line in bill_lines:
             if bill_line.get("subscription_id") not in subscription_mapping:
-                bill_line["unpaid_total"] = bill_line["total"] if bill_line["status"] == BillStatusChoices.UNPAID else 0
-                bill_line["paid_total"] = bill_line["total"] if bill_line["status"] == BillStatusChoices.PAID else 0
+                bill_line["unpaid_total"] = (
+                    bill_line["total"]
+                    if bill_line["status"] == BillStatusChoices.UNPAID
+                    else 0
+                )
+                bill_line["paid_total"] = (
+                    bill_line["total"]
+                    if bill_line["status"] == BillStatusChoices.PAID
+                    else 0
+                )
                 subscription_mapping[bill_line.get("subscription_id")] = bill_line
             else:
-                current_bill_line = subscription_mapping.get(bill_line.get("subscription_id"))
+                current_bill_line = subscription_mapping.get(
+                    bill_line.get("subscription_id")
+                )
                 current_bill_line["subtotal"] += bill_line["subtotal"]
                 if bill_line["status"] == BillStatusChoices.UNPAID:
                     current_bill_line["unpaid_total"] += bill_line["total"]
                 if bill_line["status"] == BillStatusChoices.PAID:
                     current_bill_line["paid_total"] += bill_line["total"]
 
-                subscription_mapping[bill_line.get("subscription_id")] = current_bill_line
+                subscription_mapping[
+                    bill_line.get("subscription_id")
+                ] = current_bill_line
 
         for bill_line in subscription_mapping.values():
             list_bill_line.append(
                 {
                     "id": bill_line.get("id"),
                     "summary": bill_line.get("summary"),
-                    "project_name": bill_line.get("bill", {}).get("account", {}).get("email"),
+                    "project_name": bill_line.get("bill", {})
+                    .get("account", {})
+                    .get("email"),
                     "region_name": bill_line.get("subscription", {}).get("region_name"),
-                    "resource_summary": self._get_resource_summary(bill_line.get("subscription")),
+                    "resource_summary": self._get_resource_summary(
+                        bill_line.get("subscription")
+                    ),
                     "related_ref": bill_line.get("subscription", {}).get("related_ref"),
-                    "term_start_date": bill_line.get("term_start_date").strftime("%H:%M %d/%m/%Y"),
-                    "term_end_date": bill_line.get("term_end_date").strftime("%H:%M %d/%m/%Y"),
+                    "term_start_date": bill_line.get("term_start_date").strftime(
+                        "%H:%M %d/%m/%Y"
+                    ),
+                    "term_end_date": bill_line.get("term_end_date").strftime(
+                        "%H:%M %d/%m/%Y"
+                    ),
                     "quantity": int(bill_line.get("quantity")),
                     "subtotal": bill_line.get("subtotal"),
                     "discount_percent": bill_line.get("discount_percent"),
-                    "discount_total": bill_line.get("subtotal") - (bill_line.get("paid_total") + bill_line.get("unpaid_total")),
-                    "final_total": bill_line.get("paid_total") + bill_line.get("unpaid_total"),
+                    "discount_total": bill_line.get("subtotal")
+                    - (bill_line.get("paid_total") + bill_line.get("unpaid_total")),
+                    "final_total": bill_line.get("paid_total")
+                    + bill_line.get("unpaid_total"),
                     "paid_total": bill_line.get("paid_total"),
                     "unpaid_total": bill_line.get("unpaid_total"),
                     "has_same_related_ref": bill_line.get("has_same_related_ref"),
                 }
             )
-        
+
         return list_bill_line
 
-    def _render_template(self, filename: str, payload: dict, template_name: str = "bill"):
+    def _render_template(
+        self, filename: str, payload: dict, template_name: str = "bill"
+    ):
         """
         Renders the appropriate template
         """
-        if self._render_type == RenderType.PDF:
+        if self._render_type == RenderTypeChoices.PDF:
             return self._render_pdf_template(filename, payload, template_name)
 
     def _render_pdf_template(
-            self,
-            filename: str,
-            payload: dict,
-            template_name: str = "bill", 
-            wkhtmltox_config: WKHtmlToPDFConfig = None
-        ):
+        self,
+        filename: str,
+        payload: dict,
+        template_name: str = "bill",
+        wkhtmltox_config: WKHtmlToPDFConfig = None,
+    ):
         """
         Renders the jinja template in the configured template directory
         """
@@ -277,18 +299,13 @@ class BillProcessor(ABC):
             f.write(rendered_template)
 
         options = {
-            'page-size': wkhtmltox_config.page_size or "A4",
-            'minimum-font-size': wkhtmltox_config.minimum_font_size or "5",
-            "enable-local-file-access": ""
+            "page-size": wkhtmltox_config.page_size or "A4",
+            "minimum-font-size": wkhtmltox_config.minimum_font_size or "5",
+            "enable-local-file-access": "",
         }
 
         try:
-            pdfkit.from_file(
-                in_filepath, 
-                out_filepath,
-                css=css_path,
-                options=options
-            )
+            pdfkit.from_file(in_filepath, out_filepath, css=css_path, options=options)
         except Exception as e:
             LOG.warning("WKHTMLTOPDF Error: %s", e)
         finally:
