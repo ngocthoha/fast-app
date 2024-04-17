@@ -1,4 +1,13 @@
-from sqlalchemy import Table, Column, String, DateTime, ForeignKey, Integer
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+)
 from sqlalchemy.orm import registry
 from sqlalchemy.sql import func
 
@@ -74,7 +83,7 @@ plans_table = Table(
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
     Column("summary", String),
-    Column("product_id", String, ForeignKey("v4_products.id"))
+    Column("product_id", String, ForeignKey("v4_products.id")),
 )
 
 subscription_metas_table = Table(
@@ -82,7 +91,7 @@ subscription_metas_table = Table(
     mapper_registry.metadata,
     Column("id", String, primary_key=True),
     Column("init_quantity", Integer),
-    Column("subscription_id", String, ForeignKey("v4_subscriptions.id"))
+    Column("subscription_id", String, ForeignKey("v4_subscriptions.id")),
 )
 
 services_table = Table(
@@ -92,17 +101,18 @@ services_table = Table(
     Column("name", String),
 )
 
-
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
-engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo = True)
+engine = create_engine(
+    "postgresql://postgres:postgres@localhost:5432/postgres", echo=True
+)
 meta = MetaData()
 
 templates_table = Table(
-   'templates', meta, 
-   Column('id', String, primary_key = True), 
-   Column('name', String), 
-   Column('type', String),
-   Column('start_date', DateTime),
-   Column('end_date', DateTime),
+    "templates",
+    meta,
+    Column("id", String, primary_key=True),
+    Column("name", String),
+    Column("type", String),
+    Column("start_date", DateTime),
+    Column("end_date", DateTime),
 )
 # meta.create_all(engine)

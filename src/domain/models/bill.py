@@ -1,7 +1,9 @@
 from datetime import datetime
+
+import attrs
+
 from .account import Account
 from .service import Service
-import attrs
 
 
 @attrs.define(slots=False, kw_only=True)

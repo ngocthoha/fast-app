@@ -1,11 +1,10 @@
-from src.domain.models.subscription import Subscription
-from src.domain.models.bill import Bill
 from src.app.repositories.bill_line_repository import BillLineRepository
+from src.domain.models.bill import Bill
 from src.domain.models.bill_line import BillLine
+from src.domain.models.subscription import Subscription
 
 
 class SQLBillLineRepository(BillLineRepository):
-
     def __init__(self, session):
         self.session = session
 

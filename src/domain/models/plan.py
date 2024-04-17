@@ -1,4 +1,5 @@
 import attrs
+
 from src.domain.models.product import Product
 
 

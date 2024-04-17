@@ -2,8 +2,8 @@ from datetime import datetime
 
 import attrs
 
-from src.domain.models.subscription import Subscription
 from src.domain.models.bill import Bill
+from src.domain.models.subscription import Subscription
 
 
 @attrs.define(slots=False, kw_only=True)

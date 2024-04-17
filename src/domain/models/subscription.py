@@ -1,7 +1,9 @@
 from typing import List
+
 import attrs
-from src.domain.models.plan import Plan
+
 from src.domain.models.category import Category
+from src.domain.models.plan import Plan
 
 
 @attrs.define(slots=False, kw_only=True)

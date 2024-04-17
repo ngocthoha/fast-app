@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from starlette.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import RedirectResponse
+
 from .routes import bill, template
 
 

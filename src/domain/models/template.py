@@ -1,5 +1,6 @@
-import attrs
 from datetime import datetime
+
+import attrs
 
 
 @attrs.define(slots=False, kw_only=True)

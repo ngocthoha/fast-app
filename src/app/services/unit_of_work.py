@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ..repositories import BillLineRepository
-from ..repositories import BillRepository
-from ..repositories import TemplateRepository
+from ..repositories import BillLineRepository, BillRepository, TemplateRepository
 
 
 class UnitOfWork(ABC):

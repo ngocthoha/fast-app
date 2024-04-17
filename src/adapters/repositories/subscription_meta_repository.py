@@ -1,9 +1,8 @@
 from src.app.repositories import SubscriptionMetaRepository
-from src.domain.models import SubscriptionMeta, Subscription
+from src.domain.models import Subscription, SubscriptionMeta
 
 
 class SQLSubscriptionMetaRepository(SubscriptionMetaRepository):
-
     def __init__(self, session):
         self.session = session
 
@@ -12,7 +11,7 @@ class SQLSubscriptionMetaRepository(SubscriptionMetaRepository):
             self.session.query(
                 SubscriptionMeta.id,
                 SubscriptionMeta.init_quantity,
-                SubscriptionMeta.subscription_id
+                SubscriptionMeta.subscription_id,
             )
             .join(Subscription)
             .filter(Subscription.id.in_(subscription_ids))

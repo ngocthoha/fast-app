@@ -1,6 +1,31 @@
-from src.domain.models import Bill, Account, BillLine, Subscription, SubscriptionMeta, Plan, Product, Category, Service,Template
-from .tables import mapper_registry, bills_table, accounts_table, bill_lines_table, subscriptions_table, subscription_metas_table, plans_table, products_table, categories_table, services_table, templates_table
 from sqlalchemy.orm import relationship
+
+from src.domain.models import (
+    Account,
+    Bill,
+    BillLine,
+    Category,
+    Plan,
+    Product,
+    Service,
+    Subscription,
+    SubscriptionMeta,
+    Template,
+)
+
+from .tables import (
+    accounts_table,
+    bill_lines_table,
+    bills_table,
+    categories_table,
+    mapper_registry,
+    plans_table,
+    products_table,
+    services_table,
+    subscription_metas_table,
+    subscriptions_table,
+    templates_table,
+)
 
 
 def setup_mapping():
@@ -11,7 +36,7 @@ def setup_mapping():
         properties={
             "account": relationship(Account),
             "service": relationship(Service),
-        }
+        },
     )
     mapper_registry.map_imperatively(
         BillLine,
@@ -19,29 +44,29 @@ def setup_mapping():
         properties={
             "bill": relationship(Bill),
             "subscription": relationship(Subscription),
-        }
+        },
     )
     mapper_registry.map_imperatively(
-        Subscription, 
+        Subscription,
         subscriptions_table,
         properties={
             "category": relationship(Category),
             "plan": relationship(Plan),
-        }
+        },
     )
     mapper_registry.map_imperatively(
-        SubscriptionMeta, 
+        SubscriptionMeta,
         subscription_metas_table,
         properties={
             "subscription": relationship(Subscription),
-        }
+        },
     )
     mapper_registry.map_imperatively(
-        Plan, 
+        Plan,
         plans_table,
         properties={
             "product": relationship(Product),
-        }
+        },
     )
     mapper_registry.map_imperatively(Product, products_table)
     mapper_registry.map_imperatively(Category, categories_table)

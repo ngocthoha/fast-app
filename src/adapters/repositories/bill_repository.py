@@ -1,10 +1,8 @@
-from src.domain.models import Account, Service
 from src.app.repositories import BillRepository
-from src.domain.models import Bill
+from src.domain.models import Account, Bill, Service
 
 
 class SQLBillRepository(BillRepository):
-
     def __init__(self, session):
         self.session = session
 

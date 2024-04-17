@@ -1,5 +1,9 @@
+from src.adapters.repositories import (
+    SQLBillRepository,
+    SQLSubscriptionMetaRepository,
+    SQLTemplateRepository,
+)
 from src.adapters.repositories.bill_line_repository import SQLBillLineRepository
-from src.adapters.repositories import SQLBillRepository, SQLSubscriptionMetaRepository, SQLTemplateRepository
 from src.app.services import UnitOfWork
 
 
