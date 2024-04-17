@@ -10,9 +10,7 @@ class TemplateRepository(ABC):
         pass
 
     @abstractmethod
-    def find_active_templates(
-        self, bill_type: str, term_start_date: str
-    ) -> List[Template]:
+    def find_templates(self, bill_type: str, term_start_date: str) -> List[Template]:
         pass
 
     @abstractmethod

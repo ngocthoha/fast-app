@@ -2,11 +2,10 @@ from dataclasses import dataclass
 
 import attrs
 
+from src.app.use_cases.processors.utils import RenderTemplateUtil
 from src.adapters.services import CloudServerBillProcessor
 from src.app.services.unit_of_work import UnitOfWork
-from src.utils.choices import TemplateChoices
-
-BILL_PROCESSOR_MAPPING = {TemplateChoices.CLOUD_SERVER: CloudServerBillProcessor}
+from src.utils.choices import TemplateTypeChoices
 
 
 @dataclass
@@ -16,6 +15,11 @@ class RenderTemplateCommand:
 
 
 class RenderTemplateUseCase:
+
+    BILL_PROCESSOR_MAPPING = {
+        TemplateTypeChoices.CLOUD_SERVER: CloudServerBillProcessor
+    }
+
     def __init__(self, uow: UnitOfWork):
         self._uow = uow
 
@@ -43,6 +47,7 @@ class RenderTemplateUseCase:
             related_ref_mapping = {}
 
             for bill_line in bill_lines:
+                # add subscription metadata
                 if str(bill_line["subscription_id"]) in meta_mapping:
                     bill_line["subscription"]["meta"] = meta_mapping.get(
                         bill_line["subscription_id"]
@@ -50,46 +55,30 @@ class RenderTemplateUseCase:
 
                 related_ref = bill_line.get("subscription").get("related_ref")
                 if related_ref not in related_ref_mapping:
-                    related_ref_mapping[related_ref] = False
-                else:
-                    related_ref_mapping[related_ref] = True
-
-            for bill_line in bill_lines:
-                related_ref = bill_line.get("subscription").get("related_ref")
-                if related_ref_mapping[related_ref]:
-                    bill_line["has_same_related_ref"] = True
-                else:
+                    related_ref_mapping[related_ref] = [bill_line]
                     bill_line["has_same_related_ref"] = False
+                else:
+                    related_ref_mapping[related_ref].append(bill_line)
+                    for b_line in related_ref_mapping[related_ref]:
+                        if not b_line.get("has_same_related_ref", False):
+                            b_line["has_same_related_ref"] = True
 
             with unit_of_work_custom:
-                from datetime import datetime
-
                 bill_type = bill.get("service", {}).get("name")
                 term_start_date = bill.get("term_start_date").strftime("%Y-%m-%d")
                 term_end_date = bill.get("term_end_date")
-                templates = (
-                    unit_of_work_custom.template_repository.find_active_templates(
-                        bill_type, term_start_date
-                    )
+                templates = unit_of_work_custom.template_repository.find_templates(
+                    bill_type, term_start_date
                 )
-                template_id = None
-                if templates:
-                    mindate = datetime(1970, 1, 1)
-                    sorted_templates = sorted(
-                        templates, key=lambda x: x.start_date or mindate, reverse=True
-                    )
-                    if (
-                        sorted_templates[0].end_date is None
-                        or sorted_templates[0].end_date >= term_end_date
-                    ):
-                        template_id = sorted_templates[0].id
+                template_id = RenderTemplateUtil.get_active_template_id(
+                    templates, term_end_date
+                )
 
-            bill_processor = BILL_PROCESSOR_MAPPING.get(bill_type)
-            if bill_processor is None:
-                bill_processor = CloudServerBillProcessor
+            bill_processor = self.BILL_PROCESSOR_MAPPING.get(bill_type)(
+                template_id=template_id
+            )
 
-            bp = bill_processor(template_id=template_id)
-            return bp.generate_template(
+            return bill_processor.generate_template(
                 bill=bill,
                 type=command.type,
                 bill_lines=bill_lines,

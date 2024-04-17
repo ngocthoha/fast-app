@@ -1,9 +1,9 @@
-from src.app.services.processors.base import BillProcessor, RenderType
+from src.app.services.processors.base import BillProcessor, RenderTypeChoices
 
 
 class CloudServerBillProcessor(BillProcessor):
     template_directory: str = "cloud_server"
-    _render_type = RenderType.PDF
+    _render_type = RenderTypeChoices.PDF
 
     def __init__(self, template_id: str = None):
         super().__init__(template_id)

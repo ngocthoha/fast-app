@@ -1,4 +1,4 @@
-class TemplateChoices:
+class TemplateTypeChoices:
     CLOUD_SERVER = "cloud_server"
 
 
