@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from logging import Logger, getLogger
-import subprocess
 from jinja2 import Environment, FileSystemLoader
 import os
 import pdfkit
@@ -143,16 +142,6 @@ class BillProcessor(ABC):
         }
         return [header_data]
 
-    @classmethod
-    def convert_to_custom_format(cls, number):
-        # Convert the string to a float and then format it with commas and periods
-        parts = "{:,.2f}".format(float(number)).split('.')
-
-        # Replace the commas with periods and add commas as thousands separators
-        formatted_number = parts[0].replace(',', '.') + ',' + parts[1]
-
-        return formatted_number
-
     def _get_total_bill(self, bill_lines: list):
         unpaid_total = 0
         paid_total = 0
@@ -193,7 +182,6 @@ class BillProcessor(ABC):
         ]
 
         return total_bill, unpaid_total
-
 
     def _prepare_project_data(self, bill: dict, bill_lines: list):
         total_bill, unpaid_total = self._get_total_bill(bill_lines)

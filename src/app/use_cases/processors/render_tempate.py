@@ -6,7 +6,7 @@ from src.adapters.services import CloudServerBillProcessor
 from src.utils.choices import TemplateChoices
 
 
-bill_processor_mapping = {
+BILL_PROCESSOR_MAPPING = {
     TemplateChoices.CLOUD_SERVER: CloudServerBillProcessor
 }
 
@@ -75,7 +75,7 @@ class RenderTemplateUseCase:
                     if sorted_templates[0].end_date is None or sorted_templates[0].end_date >= term_end_date:
                         template_id = sorted_templates[0].id
 
-            bill_processor = bill_processor_mapping.get(bill_type)
+            bill_processor = BILL_PROCESSOR_MAPPING.get(bill_type)
             if bill_processor is None:
                 bill_processor = CloudServerBillProcessor
 

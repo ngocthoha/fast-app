@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from .routes import bill
+from .routes import bill, template
 
 
 def create_app() -> FastAPI:
@@ -10,6 +10,7 @@ def create_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
     app.include_router(bill.router, prefix="/invoices", tags=["Bill"])
+    app.include_router(template.router, prefix="/templates", tags=["Template"])
 
     @app.get("/", include_in_schema=False)
     async def root():

@@ -12,3 +12,7 @@ class TemplateRepository(ABC):
     @abstractmethod
     def find_default_template_by_type(self, type: str) -> Optional[Template]:
         pass
+    
+    @abstractmethod
+    def save(self, template: Template):
+        pass

@@ -29,3 +29,6 @@ class SQLTemplateRepository(TemplateRepository):
             .first()
         )
         return template
+    
+    def save(self, template: Template):
+        self.session.add(template)
