@@ -42,8 +42,8 @@ class RenderTemplateUseCase:
                 subscription_ids
             )
             metas = [meta._asdict() for meta in metas]
-
             meta_mapping = {str(meta["subscription_id"]): meta for meta in metas}
+
             related_ref_mapping = {}
 
             for bill_line in bill_lines:
@@ -53,6 +53,7 @@ class RenderTemplateUseCase:
                         bill_line["subscription_id"]
                     )
 
+                # set has_same_related_ref to true if another bill line shares the same related_ref
                 related_ref = bill_line.get("subscription").get("related_ref")
                 if related_ref not in related_ref_mapping:
                     related_ref_mapping[related_ref] = [bill_line]
