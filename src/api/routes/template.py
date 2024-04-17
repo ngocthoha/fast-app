@@ -1,17 +1,17 @@
-from datetime import datetime
 import logging
+import os
+import shutil
+import zipfile
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from typing_extensions import Annotated
 
 from src.app.services import CommandBus
-import aiofiles
-import os
 from src.app.use_cases.template import CreateTemplateCommand
 from src.dependencies import get_command_bus
-from fastapi.templating import Jinja2Templates
-
 
 CHUNK_SIZE = 1024 * 1024
 
@@ -28,22 +28,43 @@ class CreateTemplateRequest(BaseModel):
 
 @router.post("")
 async def create_template(
-    # body: CreateTemplateRequest,
+    type: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    start_date: Annotated[str, Form()],
+    end_date: Optional[str] = Form(None),
     file: UploadFile = File(...),
     bus: CommandBus = Depends(get_command_bus),
 ):
-    # command = CreateTemplateCommand(type=body.type, name=body.name, start_date=body.start_date, end_date=body.end_date)
+    command = CreateTemplateCommand(
+        type=type, name=name, start_date=start_date, end_date=end_date
+    )
     try:
-        # template = bus.execute(command)
-        filepath = os.path.join('./', os.path.basename(file.filename))
-        print(filepath)
-        with open(filepath, 'wb') as f:
+        template = bus.execute(command)
+        directory = f"src/templates/{type}/{template.id}"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_location = f"{directory}/{os.path.basename(file.filename)}"
+        with open(file_location, "wb") as f:
             while chunk := file.file.read(CHUNK_SIZE):
                 f.write(chunk)
+
+        with zipfile.ZipFile(file_location, "r") as zip_ref:
+            zip_ref.extractall(directory)
+
+        def move_to_main(source, destination):
+            files = os.listdir(source)
+            for file in files:
+                file_name = os.path.join(source, file)
+                shutil.move(file_name, destination)
+
+        original_filename = f"{directory}/{file.filename[:-4]}"
+        move_to_main(original_filename, directory)
     except Exception as e:
         logging.exception(e)
         raise HTTPException(status_code=500, detail="Internal server error")
     finally:
-        file.close()
-    # return templates.TemplateResponse("bd416a7e-1bec-45be-955f-b101c3375e12.pdf", context= {"request": request}) 
-    return FileResponse(template, media_type='application/pdf')
+        os.remove(file_location)
+        os.rmdir(original_filename)
+
+    return {"message": f"Successfully uploaded {file.filename}"}
