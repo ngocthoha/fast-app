@@ -1,4 +1,11 @@
 [flake8]
-ignore=F401,F403,W504,W503
-max-line-length=120
+ignore =
+    # Line too long
+    E501,
+    # Trailing whitespace, it happens...
+    W291,
+    # Spacing incompatibilities with black
+    W503,
+    E203,
+    E231
 exclude=venv
